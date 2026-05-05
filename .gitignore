@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Local scripts (excluded from repo)
+scripts/
+
+# Uploads
+uploads/
+
+# Alembic version files (keep only the .gitkeep)
+migrations/versions/*.py
+!migrations/versions/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
