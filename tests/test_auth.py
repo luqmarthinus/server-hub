@@ -7,7 +7,6 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import verify_password, create_access_token
-from src.models.user import User
 
 
 @pytest.mark.asyncio
@@ -26,13 +25,12 @@ async def test_register_success(async_client: AsyncClient):
     assert data["email"] == "test@example.com"
     assert data["full_name"] == "Test User"
     assert "id" in data
-    assert "password" not in data  # password should not be returned
+    assert "password" not in data
 
 
 @pytest.mark.asyncio
 async def test_register_duplicate_email(async_client: AsyncClient):
     """Test registration with existing email returns 400."""
-    # First registration
     await async_client.post(
         "/api/auth/register",
         json={
@@ -41,7 +39,6 @@ async def test_register_duplicate_email(async_client: AsyncClient):
             "full_name": "First User",
         },
     )
-    # Second registration with same email
     response = await async_client.post(
         "/api/auth/register",
         json={
@@ -65,13 +62,12 @@ async def test_register_invalid_email(async_client: AsyncClient):
             "full_name": "Test User",
         },
     )
-    assert response.status_code == 422  # Pydantic validation error
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_login_success(async_client: AsyncClient):
     """Test login with valid credentials returns access token."""
-    # First register a user
     await async_client.post(
         "/api/auth/register",
         json={
@@ -80,10 +76,9 @@ async def test_login_success(async_client: AsyncClient):
             "full_name": "Login User",
         },
     )
-    # Then login
     response = await async_client.post(
         "/api/auth/login",
-        data={  # OAuth2 form data
+        data={
             "username": "login@example.com",
             "password": "CorrectPass123",
         },
@@ -133,7 +128,6 @@ async def test_login_nonexistent_user(async_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_me_with_token(async_client: AsyncClient):
     """Test accessing /me with valid token returns user info."""
-    # Register and login
     await async_client.post(
         "/api/auth/register",
         json={
