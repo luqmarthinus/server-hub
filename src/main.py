@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from loguru import logger
 
 from src.api.auth import router as auth_router
@@ -13,7 +16,6 @@ from src.core.logging import configure_logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Handle startup and shutdown events."""
     configure_logging()
     logger.info("Starting FastAPI application")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
@@ -22,7 +24,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 def create_app() -> FastAPI:
-    """Application factory."""
     app = FastAPI(
         title="FastAPI Application",
         description="Production-ready FastAPI backend with JWT auth, MySQL, observability",
@@ -41,37 +42,56 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Include authentication routes
+    # Static files (CSS, JS)
+    static_dir = Path("src/static")
+    static_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+    # Jinja2 templates
+    templates_dir = Path("src/templates")
+    templates_dir.mkdir(parents=True, exist_ok=True)
+    templates = Jinja2Templates(directory=str(templates_dir))
+
+    # Include authentication API routes
     app.include_router(auth_router)
 
-    # Health check endpoints
+    # --------------------------------------------------------------------------
+    # Frontend HTML routes
+    # --------------------------------------------------------------------------
+    @app.get("/login", response_class=HTMLResponse)
+    async def login_page(request: Request):
+        return templates.TemplateResponse("login.html", {"request": request})
+
+    @app.get("/register", response_class=HTMLResponse)
+    async def register_page(request: Request):
+        return templates.TemplateResponse("register.html", {"request": request})
+
+    @app.get("/dashboard", response_class=HTMLResponse)
+    async def dashboard_page(request: Request):
+        return templates.TemplateResponse("dashboard.html", {"request": request})
+
+    @app.get("/", response_class=HTMLResponse)
+    async def root_page(request: Request):
+        # Redirect to login or dashboard? Simple redirect to login for now.
+        return RedirectResponse(url="/login", status_code=302)
+
+    # --------------------------------------------------------------------------
+    # Health check endpoints (unchanged)
+    # --------------------------------------------------------------------------
     @app.get("/health/live", tags=["Health"])
     async def liveness_check() -> JSONResponse:
-        """Kubernetes liveness probe."""
         return JSONResponse(content={"status": "alive"}, status_code=200)
 
     @app.get("/health/ready", tags=["Health"])
     async def readiness_check() -> JSONResponse:
-        """Kubernetes readiness probe."""
         return JSONResponse(content={"status": "ready"}, status_code=200)
 
-    # Root endpoint
-    @app.get("/", tags=["Info"])
-    async def root() -> JSONResponse:
-        return JSONResponse(
-            content={
-                "name": "FastAPI Application",
-                "version": "0.1.0",
-                "environment": settings.ENVIRONMENT,
-                "docs": "/docs" if settings.ENVIRONMENT == "development" else "Disabled",
-            }
-        )
-
-    # Request logging middleware
+    # --------------------------------------------------------------------------
+    # Request logging middleware (unchanged)
+    # --------------------------------------------------------------------------
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         import time
-
         start = time.perf_counter()
         response = await call_next(request)
         duration = time.perf_counter() - start
@@ -87,12 +107,10 @@ def create_app() -> FastAPI:
     return app
 
 
-# Create global app instance
 app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(
         "src.main:app",
         host="0.0.0.0",
