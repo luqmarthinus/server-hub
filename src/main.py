@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Server Hub API",
-        description="Backend API for server reporting and collaboration",
+        description="Backend API for server system reporting and user authentication (JWT, MySQL, Docker)",
         version="0.2.0",
         docs_url="/docs" if settings.ENVIRONMENT == "development" else None,
         redoc_url="/redoc" if settings.ENVIRONMENT == "development" else None,
