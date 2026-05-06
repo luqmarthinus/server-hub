@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
 from loguru import logger
 
 from src.api.auth import router as auth_router
@@ -43,6 +44,24 @@ def create_app() -> FastAPI:
     # Include API routers
     app.include_router(auth_router)
     app.include_router(reports_router)
+
+    # --------------------------------------------------------------------------
+    # Static frontend routes (minimal login and dashboard)
+    # --------------------------------------------------------------------------
+    frontend_dir = Path("frontend")
+    frontend_dir.mkdir(exist_ok=True)
+
+    @app.get("/", response_class=HTMLResponse)
+    async def root():
+        return RedirectResponse(url="/login", status_code=302)
+
+    @app.get("/login", response_class=HTMLResponse)
+    async def login_page():
+        return FileResponse(frontend_dir / "login.html")
+
+    @app.get("/dashboard", response_class=HTMLResponse)
+    async def dashboard_page():
+        return FileResponse(frontend_dir / "dashboard.html")
 
     # Health check endpoints
     @app.get("/health/live", tags=["Health"])
