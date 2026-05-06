@@ -29,8 +29,15 @@ def mysql_container() -> Generator[MySqlContainer, None, None]:
 
 @pytest.fixture(scope="session")
 def database_url(mysql_container: MySqlContainer) -> str:
+    """Async database URL for application (using aiomysql)."""
     url = mysql_container.get_connection_url().replace("mysql+pymysql", "mysql+aiomysql")
     return url
+
+
+@pytest.fixture(scope="session")
+def sync_database_url(mysql_container: MySqlContainer) -> str:
+    """Sync database URL for Alembic migrations (using pymysql)."""
+    return mysql_container.get_connection_url()  # mysql+pymysql
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -41,9 +48,10 @@ async def async_engine(database_url: str) -> AsyncGenerator[AsyncEngine, None]:
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
-async def run_migrations(async_engine: AsyncEngine, database_url: str) -> None:
+async def run_migrations(sync_database_url: str) -> None:
     import os
-    os.environ["DATABASE_URL"] = database_url
+    # Alembic requires a sync URL with pymysql driver
+    os.environ["DATABASE_URL"] = sync_database_url
     from alembic.config import Config
     from alembic import command
     alembic_cfg = Config("alembic.ini")

@@ -45,6 +45,7 @@ dev = [
     "testcontainers[mysql]==4.14.2",   # last stable before 4.15.x (which has no release)
     "pytest-xdist==3.8.0",
     "ruff==0.13.0",
+    "pymysql==1.1.2",
     "pre-commit==4.3.0",
 ]
 
@@ -56,7 +57,7 @@ select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 env = [
-    "ENVIRONMENT=test",
+    "ENVIRONMENT=testing",
     "DATABASE_URL=mysql+aiomysql://root:testpass@localhost:3306/testdb",
 ]
 testpaths = ["tests"]
