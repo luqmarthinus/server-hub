@@ -1,10 +1,8 @@
-# migrations/env.py
 from logging.config import fileConfig
 import os
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-# Import Base from the placeholder (will work after we create the file)
 from src.core.database import Base
 
 config = context.config
@@ -26,6 +24,7 @@ def run_migrations_offline():
         context.run_migrations()
 
 def run_migrations_online():
+    # Force reading URL from environment variable
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         raise ValueError("DATABASE_URL environment variable not set")
