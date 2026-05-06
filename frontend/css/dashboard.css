@@ -1,0 +1,76 @@
+body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, -apple-system, 'Roboto', sans-serif;
+}
+
+/* Glass effect for cards */
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.glass-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
+}
+.glass-card .card-header,
+.glass-card .card-body {
+    background: transparent;
+    color: #f0f0f0;
+}
+.glass-card .card-title {
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.navbar-dark.bg-dark-glass {
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.btn-generate {
+    background: linear-gradient(90deg, #2a9d8f, #267c6b);
+    border: none;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-generate:hover {
+    transform: scale(1.02);
+    background: linear-gradient(90deg, #2cbbaa, #2a9d8f);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.table {
+    color: #e0e0e0;
+}
+.table thead th {
+    background: rgba(0, 0, 0, 0.6);
+    border-bottom: none;
+    font-weight: 600;
+}
+.table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    transition: background 0.2s;
+}
+.table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+#userInfo {
+    font-size: 1rem;
+    line-height: 1.8;
+}
+#userInfo p {
+    margin-bottom: 0.5rem;
+}
+#userInfo strong {
+    color: #ffd966;
+}
+canvas {
+    background: rgba(0,0,0,0.3);
+    border-radius: 1rem;
+    padding: 0.5rem;
+}

@@ -1,0 +1,34 @@
+body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.login-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+}
+.login-header {
+    background: linear-gradient(120deg, #2c3e50, #1a2632);
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding: 1.8rem;
+    text-align: center;
+    color: white;
+}
+.login-header i {
+    font-size: 3rem;
+    background: rgba(255,255,255,0.2);
+    padding: 1rem;
+    border-radius: 50%;
+}
+.btn-primary {
+    background: linear-gradient(90deg, #1e2a36, #11181f);
+    border: none;
+    transition: all 0.3s;
+}
+.btn-primary:hover {
+    transform: scale(1.02);
+    background: linear-gradient(90deg, #2c3e50, #1a2632);
+}

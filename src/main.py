@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from src.api.auth import router as auth_router
@@ -46,11 +47,18 @@ def create_app() -> FastAPI:
     app.include_router(reports_router)
 
     # --------------------------------------------------------------------------
-    # Static frontend routes (minimal login and dashboard)
+    # Static frontend assets (CSS, JS) – must be mounted before HTML routes
     # --------------------------------------------------------------------------
     frontend_dir = Path("frontend")
     frontend_dir.mkdir(exist_ok=True)
 
+    # Mount the entire frontend directory under /static so that browser can fetch
+    # /static/css/login.css and /static/js/login.js
+    app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
+
+    # --------------------------------------------------------------------------
+    # HTML pages (using FileResponse)
+    # --------------------------------------------------------------------------
     @app.get("/", response_class=HTMLResponse)
     async def root():
         return RedirectResponse(url="/login", status_code=302)
@@ -63,7 +71,9 @@ def create_app() -> FastAPI:
     async def dashboard_page():
         return FileResponse(frontend_dir / "dashboard.html")
 
+    # --------------------------------------------------------------------------
     # Health check endpoints
+    # --------------------------------------------------------------------------
     @app.get("/health/live", tags=["Health"])
     async def liveness_check() -> JSONResponse:
         return JSONResponse(content={"status": "alive"}, status_code=200)
@@ -72,7 +82,9 @@ def create_app() -> FastAPI:
     async def readiness_check() -> JSONResponse:
         return JSONResponse(content={"status": "ready"}, status_code=200)
 
+    # --------------------------------------------------------------------------
     # Request logging middleware
+    # --------------------------------------------------------------------------
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         import time
