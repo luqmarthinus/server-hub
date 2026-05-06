@@ -101,7 +101,7 @@ The JWT secret is stored in `.env` (generated automatically by `setup.sh`). To r
 Existing tokens will become invalid; users must log in again.
 
 ## Environment variables
-Copy `.env.example` to `.env` (this is done by `setup.sh`). Key variables:
+Key variables:
 | Variable                                          | Description                                                                 |
 |---------------------------------------------------|-----------------------------------------------------------------------------|
 | `ENVIRONMENT`                                     | `development` (enable docs) or `production`                                |
