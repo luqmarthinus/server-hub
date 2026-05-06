@@ -19,14 +19,20 @@ git clone https://github.com/luqmarthinus/server-hub.git
 cd server-hub
 ```
 
-2. Run the setup script (creates .env, pulls images, starts services):
+2. Create the environment file and generate a JWT secret:
 
 ```bash
-./scripts/setup.sh
+cp .env.example .env
+# Generate a secure JWT secret (32 bytes hex)
+echo "JWT_SECRET=$(openssl rand -hex 32)" >> .env
 ```
-The script checks for Python 3.12+, Docker, and Docker Compose v2. It creates a virtual environment, installs dependencies, generates a random JWT secret, and starts MySQL and the FastAPI app.
+3. Start the stack:
 
-3. Access the application:
+  ```bash
+docker compose up -d
+```
+
+4. Access the application:
 
 
 | Service | URL | Description |
@@ -36,7 +42,7 @@ The script checks for Python 3.12+, Docker, and Docker Compose v2. It creates a 
 | MySQL      | localhost:3306 | Database (username/password from .env) |
 
 
-4. Log in with a user you register via Swagger UI (POST /api/v1/auth/register). After logging in on the web interface, you can generate server reports and see them appear in the dashboard chart and table.
+5. Log in with a user you register via Swagger UI (`POST /api/v1/auth/register`). After logging in on the web interface, you can generate server reports and see them appear in the dashboard chart and table.
 
 ## What's included
 | Component | Purpose | Host port |
@@ -112,12 +118,6 @@ docker compose down
 ```
 Add `-v` to also remove data volumes (resets the database).
 
-## Uninstalling the stack completely
-To remove all Docker containers, networks, volumes, and the generated `.env` file, run:
-
-```bash
-./scripts/uninstall.sh
-```
 
 ## Troubleshooting
 Containers restarting / healthcheck failing: Check logs with `docker compose logs app` or `docker compose logs mysql`.
@@ -128,7 +128,7 @@ Login redirects back to login page: Open browser console – likely the token is
  
 Reports endpoint returns 500 / table missing: Run `docker compose exec app alembic upgrade head` to apply database migrations.
 
-Port conflicts: Change the host ports in compose.yaml (e.g., "8000:8000" -> "8001:8000").
+Port conflicts: Change the host ports in `compose.yaml` (e.g., "8000:8000" -> "8001:8000").
 
 Can't connect to MySQL: Ensure the MySQL container is healthy (`docker compose ps`). The app uses the service name `mysql` as hostname, which works inside the Docker network.
 
