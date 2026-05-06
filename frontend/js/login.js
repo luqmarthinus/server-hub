@@ -11,7 +11,7 @@ loginBtn.addEventListener('click', async () => {
         return;
     }
     try {
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch('/api/v1/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ username: email, password })
@@ -24,7 +24,7 @@ loginBtn.addEventListener('click', async () => {
             const err = await res.json();
             showError(err.detail || 'Invalid credentials');
         }
-    } catch {
+    } catch (err) {
         showError('Network error');
     }
 });

@@ -21,7 +21,7 @@ async function apiFetch(endpoint, options = {}) {
 }
 
 async function loadUser() {
-    const res = await apiFetch('/api/auth/me');
+    const res = await apiFetch('/api/v1/auth/me');
     if (res.ok) {
         const user = await res.json();
         const html = `
@@ -35,7 +35,7 @@ async function loadUser() {
 }
 
 async function loadReports() {
-    const res = await apiFetch('/api/reports/');
+    const res = await apiFetch('/api/v1/reports/');
     if (res.ok) {
         const data = await res.json();
         const reports = data.reports;
@@ -45,7 +45,6 @@ async function loadReports() {
             if (cpuChart) cpuChart.destroy();
             return;
         }
-        // Build table rows
         tbody.innerHTML = reports.map(r => `
             <tr>
                 <td>${new Date(r.created_at).toLocaleString()}</td>
@@ -55,8 +54,6 @@ async function loadReports() {
                 <td><i class="bi bi-arrow-down-up"></i> ${((r.network?.bytes_recv || 0) / 1024).toFixed(1)} / ${((r.network?.bytes_sent || 0) / 1024).toFixed(1)}</td>
             </tr>
         `).join('');
-
-        // Update chart with last 10 values
         const last10 = reports.slice(-10);
         const labels = last10.map(r => new Date(r.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
         const cpuData = last10.map(r => r.cpu_percent);
@@ -93,7 +90,7 @@ async function generateReport() {
     const msgDiv = document.getElementById('generateMsg');
     btn.disabled = true;
     msgDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-light me-2" role="status"></div> Generating...';
-    const res = await apiFetch('/api/reports/', { method: 'POST' });
+    const res = await apiFetch('/api/v1/reports/', { method: 'POST' });
     if (res.ok) {
         msgDiv.innerHTML = '<div class="alert alert-success py-2">✔ Report generated successfully!</div>';
         await loadReports();
@@ -115,19 +112,16 @@ function escapeHtml(str) {
     });
 }
 
-// Event listeners
 document.getElementById('logoutBtn').addEventListener('click', () => {
     localStorage.removeItem('access_token');
     window.location.href = '/login';
 });
 document.getElementById('generateBtn').addEventListener('click', generateReport);
 
-// Initial load
 if (!getToken()) {
     window.location.href = '/login';
 } else {
     loadUser();
     loadReports();
-    // Auto-refresh every 30 seconds
     setInterval(loadReports, 30000);
 }
