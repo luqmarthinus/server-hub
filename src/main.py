@@ -1,15 +1,13 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
-from pathlib import Path
 
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.auth import router as auth_router
+from src.api.reports import router as reports_router
 from src.core.config import settings
 from src.core.logging import configure_logging
 
@@ -25,9 +23,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="FastAPI Application",
-        description="Production-ready FastAPI backend with JWT auth, MySQL, observability",
-        version="0.1.0",
+        title="Server Hub API",
+        description="Backend API for server reporting and collaboration",
+        version="0.2.0",
         docs_url="/docs" if settings.ENVIRONMENT == "development" else None,
         redoc_url="/redoc" if settings.ENVIRONMENT == "development" else None,
         lifespan=lifespan,
@@ -42,42 +40,11 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Static files (CSS, JS)
-    static_dir = Path("src/static")
-    static_dir.mkdir(parents=True, exist_ok=True)
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
-    # Jinja2 templates
-    templates_dir = Path("src/templates")
-    templates_dir.mkdir(parents=True, exist_ok=True)
-    templates = Jinja2Templates(directory=str(templates_dir))
-
-    # Include authentication API routes
+    # Include API routers
     app.include_router(auth_router)
+    app.include_router(reports_router)
 
-    # --------------------------------------------------------------------------
-    # Frontend HTML routes
-    # --------------------------------------------------------------------------
-    @app.get("/login", response_class=HTMLResponse)
-    async def login_page(request: Request):
-        return templates.TemplateResponse("login.html", {"request": request})
-
-    @app.get("/register", response_class=HTMLResponse)
-    async def register_page(request: Request):
-        return templates.TemplateResponse("register.html", {"request": request})
-
-    @app.get("/dashboard", response_class=HTMLResponse)
-    async def dashboard_page(request: Request):
-        return templates.TemplateResponse("dashboard.html", {"request": request})
-
-    @app.get("/", response_class=HTMLResponse)
-    async def root_page(request: Request):
-        # Redirect to login or dashboard? Simple redirect to login for now.
-        return RedirectResponse(url="/login", status_code=302)
-
-    # --------------------------------------------------------------------------
-    # Health check endpoints (unchanged)
-    # --------------------------------------------------------------------------
+    # Health check endpoints
     @app.get("/health/live", tags=["Health"])
     async def liveness_check() -> JSONResponse:
         return JSONResponse(content={"status": "alive"}, status_code=200)
@@ -86,9 +53,7 @@ def create_app() -> FastAPI:
     async def readiness_check() -> JSONResponse:
         return JSONResponse(content={"status": "ready"}, status_code=200)
 
-    # --------------------------------------------------------------------------
-    # Request logging middleware (unchanged)
-    # --------------------------------------------------------------------------
+    # Request logging middleware
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         import time

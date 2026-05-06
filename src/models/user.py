@@ -5,6 +5,7 @@ User ORM model for SQLAlchemy.
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from src.core.database import Base
+from sqlalchemy.orm import relationship
 
 
 class User(Base):
@@ -18,3 +19,4 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    reports = relationship("ServerReport", back_populates="user", cascade="all, delete-orphan")

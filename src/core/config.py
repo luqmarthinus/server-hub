@@ -19,21 +19,11 @@ class Settings(BaseSettings):
     MYSQL_HOST: str = "localhost"
     MYSQL_PORT: int = 3306
 
-    SMTP_HOST: str = "localhost"
-    SMTP_PORT: int = 1025
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    SMTP_USE_TLS: bool = False
-    SMTP_USE_SSL: bool = False
-    EMAIL_FROM: str = "noreply@fastapi-app.local"
-    EMAIL_VERIFICATION_SUBJECT: str = "Verify your email address"
-    EMAIL_VERIFICATION_TEMPLATE: str = "verification.html"
-
     LOG_LEVEL: str = Field(default="INFO", pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
 
-    # CORS origins as string (will be split later)
     CORS_ORIGINS_STR: str = Field(default="http://localhost:8000,http://localhost:3000", alias="CORS_ORIGINS")
 
+    # (Optional: you can keep rate limiting and upload settings if needed)
     RATE_LIMIT_REQUESTS: int = 60
     RATE_LIMIT_PERIOD: int = 60
     MAX_UPLOAD_SIZE_MB: int = 10

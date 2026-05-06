@@ -1,0 +1,76 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc
+import psutil
+
+from src.core.database import get_db
+from src.api.auth import get_current_user
+from src.models.user import User
+from src.models.report import ServerReport
+from src.schemas.report import ReportCreate, ReportResponse, ReportListResponse
+
+router = APIRouter(prefix="/api/reports", tags=["reports"])
+
+
+def get_system_metrics():
+    """Collect current system metrics using psutil."""
+    cpu = psutil.cpu_percent(interval=1)
+    mem = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    net = psutil.net_io_counters()
+    return {
+        "cpu_percent": cpu,
+        "memory_percent": mem.percent,
+        "memory_used_mb": mem.used / (1024 * 1024),
+        "memory_total_mb": mem.total / (1024 * 1024),
+        "disk_percent": disk.percent,
+        "disk_used_gb": disk.used / (1024 ** 3),
+        "disk_total_gb": disk.total / (1024 ** 3),
+        "network": {
+            "bytes_sent": net.bytes_sent,
+            "bytes_recv": net.bytes_recv,
+        }
+    }
+
+
+@router.post("/", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
+async def create_report(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate a new system report for the authenticated user."""
+    metrics = get_system_metrics()
+    new_report = ServerReport(
+        user_id=current_user.id,
+        cpu_percent=metrics["cpu_percent"],
+        memory_percent=metrics["memory_percent"],
+        memory_used_mb=metrics["memory_used_mb"],
+        memory_total_mb=metrics["memory_total_mb"],
+        disk_percent=metrics["disk_percent"],
+        disk_used_gb=metrics["disk_used_gb"],
+        disk_total_gb=metrics["disk_total_gb"],
+        network=metrics["network"],
+    )
+    db.add(new_report)
+    await db.commit()
+    await db.refresh(new_report)
+    return new_report
+
+
+@router.get("/", response_model=ReportListResponse)
+async def list_reports(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    skip: int = 0,
+    limit: int = 50,
+):
+    """List all reports for the authenticated user (most recent first)."""
+    result = await db.execute(
+        select(ServerReport)
+        .where(ServerReport.user_id == current_user.id)
+        .order_by(desc(ServerReport.created_at))
+        .offset(skip)
+        .limit(limit)
+    )
+    reports = result.scalars().all()
+    return {"reports": reports, "total": len(reports)}

@@ -12,7 +12,6 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./sql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-changeme_root}"]
       interval: 10s
@@ -22,16 +21,6 @@ services:
     networks:
       - fastapi_network
 
-  mailhog:
-    image: axllent/mailpit:v1.22.0
-    container_name: fastapi_mailhog
-    restart: unless-stopped
-    ports:
-    - "1025:1025"   # SMTP port (same as before)
-    - "8025:8025"   # Web UI (same as before)
-    networks:
-    - fastapi_network
-
   app:
     build: .
     container_name: fastapi_app
@@ -40,14 +29,10 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=mysql+aiomysql://${MYSQL_USER:-fastapi_user}:${MYSQL_PASSWORD:-changeme_user}@mysql:3306/${MYSQL_DATABASE:-fastapi_app}
-      - SMTP_HOST=mailhog
-      - SMTP_PORT=1025
       - ENVIRONMENT=${ENVIRONMENT:-production}
     depends_on:
       mysql:
         condition: service_healthy
-      mailhog:
-        condition: service_started
     networks:
       - fastapi_network
 
