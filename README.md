@@ -38,20 +38,22 @@ docker compose up -d
 | Service | URL | Description |
 |------------|---------|-----------|
 | Swagger UI (API docs)   | http://localhost:8000/docs | Explore and test the versioned API |
-| Dashboard | http://localhost:8000 | Login with a registered user, then view reports |
-| MySQL      | localhost:3306 | Database (username/password from .env) |
+| Registration page | http://localhost:8000/register | Create a new user account |
+| Login page | http://localhost:8000/login | Sign in with your credentials |
+| Dashboard | http://localhost:8000 | View and generate server reports (after login) |
+| MySQL      | localhost:3306 | Database (credentials from .env) |
 
 
-5. Log in with a user you register via Swagger UI (`POST /api/v1/auth/register`). After logging in on the web interface, you can generate server reports and see them appear in the dashboard chart and table.
+5. Log in with a user you register via the web registration page (`/register`) or directly through the API.
 
 ## What's included
 | Component | Purpose | Host port |
 |------------|---------|-----------|
 | FastAPI app   | Backend API (JWT auth, metrics collection) | 8000 |
 | MySQL 8.0 | Persistent database for users and reports | 3306 |
-| Frontend      | Static HTML/CSS/JS dashboard (Bootstrap, Chart.js) | same as app (8000) |
+| Frontend      | Static HTML/CSS/JS dashboard (Bootstrap, Chart.js) | served by app on same port |
 
-All services are defined in compose.yaml. The app container exposes the API and serves the static frontend. MySQL has a healthcheck and a persistent volume.
+All services are defined in `compose.yaml`. The app container exposes the API and serves the static frontend. MySQL has a healthcheck and a persistent volume.
 
 ## Endpoints (versioned, /api/v1)
 
@@ -65,15 +67,15 @@ All services are defined in compose.yaml. The app container exposes the API and 
 | GET      | `/health/live`                 | Liveness probe for Docker                                                  |
 | GET      | `/health/ready`                | Readiness probe for Docker                                                 |
 
-All endpoints (except health) are documented in Swagger UI with examples and response schemas. The OpenAPI spec is available at /openapi.json.
+All endpoints (except health) are documented in Swagger UI with examples and response schemas. The OpenAPI spec is available at `/openapi.json`.
 
 ## Frontend integration
 
-The static frontend (login + dashboard) communicates with the versioned API. To build your own frontend:
+The static frontend (login,registration, dashboard) communicates with the versioned API. To build your own frontend:
 
 Base URL: http://localhost:8000/api/v1
 
-Authentication: store the access_token from `/login` in localStorage or a secure cookie. Include it in every request as Authorization: Bearer `<token>`.
+Authentication: Store the access_token from `/login` in localStorage or a secure cookie. Include it in every request as `Authorization: Bearer <token>`.
 
 Example registration (JavaScript):
 
@@ -87,7 +89,7 @@ fetch('/api/v1/auth/register', {
 The dashboard source code (`frontend/js/dashboard.js`) is a complete reference.
 
 ## Health checks
-The FastAPI container defines a healthcheck that polls `/health/live`. MySQL has a `mysqladmin ping` healthcheck. Docker Compose respects these – the stack starts only when both services are healthy.
+The FastAPI container defines a healthcheck that polls `/health/live`. MySQL has a `mysqladmin ping` healthcheck. Docker Compose respects these as the stack starts only when both services are healthy.
 
 ## Managing the JWT secret
 The JWT secret is stored in `.env` (generated automatically by `setup.sh`). To rotate it:
@@ -101,7 +103,7 @@ The JWT secret is stored in `.env` (generated automatically by `setup.sh`). To r
 Existing tokens will become invalid; users must log in again.
 
 ## Environment variables
-Key variables:
+Key variables (see `.env.example`):
 | Variable                                          | Description                                                                 |
 |---------------------------------------------------|-----------------------------------------------------------------------------|
 | `ENVIRONMENT`                                     | `development` (enable docs) or `production`                                |
