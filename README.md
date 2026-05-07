@@ -10,6 +10,13 @@ A full‑stack server monitoring hub – FastAPI backend + interactive dashboard
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.136-grey?logo=fastapi)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql)
 
+
+## Dashboard preview
+
+![Server Hub Dashboard](docs/dashboard.png)
+
+
+
 ## Quick start
 
 1. Clone the repository:
