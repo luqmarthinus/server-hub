@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 import psutil
+import csv
+from io import StringIO
+from datetime import datetime, timedelta
 
 from src.core.database import get_db
 from src.api.auth import get_current_user
@@ -81,24 +85,100 @@ async def list_reports(
     db: AsyncSession = Depends(get_db),
     skip: int = 0,
     limit: int = 50,
+    days: int = Query(None, description="Filter reports from last N days (optional)")
 ):
     """
     Retrieve reports for the current user.
 
     - **skip**: number of records to skip (pagination)
     - **limit**: maximum records to return (default 50)
+    - **days**: optional integer to return only reports from the last N days
 
     Headers:
         Authorization: Bearer <access_token>
 
     Returns an object with `reports` list and `total` count.
     """
-    result = await db.execute(
-        select(ServerReport)
-        .where(ServerReport.user_id == current_user.id)
-        .order_by(desc(ServerReport.created_at))
-        .offset(skip)
-        .limit(limit)
-    )
+    stmt = select(ServerReport).where(ServerReport.user_id == current_user.id)
+    if days:
+        cutoff = datetime.utcnow() - timedelta(days=days)
+        stmt = stmt.where(ServerReport.created_at >= cutoff)
+    stmt = stmt.order_by(desc(ServerReport.created_at)).offset(skip).limit(limit)
+    result = await db.execute(stmt)
     reports = result.scalars().all()
     return {"reports": reports, "total": len(reports)}
+
+
+@router.delete(
+    "/{report_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a specific report",
+    description="Deletes a report owned by the authenticated user."
+)
+async def delete_report(
+    report_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Delete a report by its ID. Only the owner can delete it.
+    """
+    result = await db.execute(
+        select(ServerReport).where(
+            ServerReport.id == report_id,
+            ServerReport.user_id == current_user.id
+        )
+    )
+    report = result.scalar_one_or_none()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    await db.delete(report)
+    await db.commit()
+    return None
+
+
+@router.get(
+    "/export",
+    summary="Export reports as CSV",
+    description="Downloads all reports (optionally filtered by days) as a CSV file."
+)
+async def export_reports(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    days: int = Query(None, description="Filter reports from last N days (optional)")
+):
+    """
+    Export the user's reports to a CSV file.
+
+    - **days**: optional integer to export only reports from the last N days
+    """
+    stmt = select(ServerReport).where(ServerReport.user_id == current_user.id)
+    if days:
+        cutoff = datetime.utcnow() - timedelta(days=days)
+        stmt = stmt.where(ServerReport.created_at >= cutoff)
+    stmt = stmt.order_by(desc(ServerReport.created_at))
+    result = await db.execute(stmt)
+    reports = result.scalars().all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "created_at", "cpu_percent", "memory_percent", "disk_percent",
+        "network_bytes_recv", "network_bytes_sent"
+    ])
+    for r in reports:
+        writer.writerow([
+            r.created_at.isoformat() if r.created_at else "",
+            r.cpu_percent,
+            r.memory_percent,
+            r.disk_percent,
+            r.network.get("bytes_recv", "") if r.network else "",
+            r.network.get("bytes_sent", "") if r.network else "",
+        ])
+    output.seek(0)
+
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=reports.csv"}
+    )
