@@ -30,6 +30,10 @@ async function loadUser() {
         `;
         document.getElementById('userInfo').innerHTML = html;
         document.getElementById('userEmailNav').innerText = user.email;
+        const adminLink = document.getElementById('adminNavLink');
+        if (adminLink) {
+            adminLink.style.display = user.is_superuser ? 'inline-block' : 'none';
+        }
     }
 }
 
@@ -68,7 +72,6 @@ function escapeHtml(str) {
     });
 }
 
-// Change password form
 const changeForm = document.getElementById('changePasswordForm');
 const passwordMsg = document.getElementById('passwordMsg');
 changeForm.addEventListener('submit', async (e) => {
@@ -90,7 +93,6 @@ changeForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Delete account button
 const deleteBtn = document.getElementById('deleteAccountBtn');
 const deleteMsg = document.getElementById('deleteMsg');
 deleteBtn.addEventListener('click', async () => {
@@ -98,13 +100,11 @@ deleteBtn.addEventListener('click', async () => {
     deleteMsg.innerHTML = '<div class="spinner-border spinner-border-sm text-light me-2" role="status"></div> Deleting...';
     try {
         await deleteAccount();
-        // Redirect will happen in deleteAccount function
     } catch (err) {
         deleteMsg.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
     }
 });
 
-// Logout
 document.getElementById('logoutBtn').addEventListener('click', () => {
     localStorage.removeItem('access_token');
     window.location.href = '/login';

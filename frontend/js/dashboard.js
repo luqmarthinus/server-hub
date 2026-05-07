@@ -29,6 +29,10 @@ async function loadUser() {
     if (res.ok) {
         const user = await res.json();
         document.getElementById('userEmailNav').innerText = user.email;
+        const adminLink = document.getElementById('adminNavLink');
+        if (adminLink) {
+            adminLink.style.display = user.is_superuser ? 'inline-block' : 'none';
+        }
     }
 }
 
@@ -90,11 +94,37 @@ async function loadReports() {
                 options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => `${latest.disk_percent.toFixed(1)}%` } } } }
             });
             document.getElementById('diskPercent').innerText = `${latest.disk_percent.toFixed(1)}%`;
+        } else {
+            // No reports: show 0% gauges
+            if (cpuGauge) cpuGauge.destroy();
+            if (memGauge) memGauge.destroy();
+            if (diskGauge) diskGauge.destroy();
+            const cpuCtx = document.getElementById('cpuGauge').getContext('2d');
+            const memCtx = document.getElementById('memGauge').getContext('2d');
+            const diskCtx = document.getElementById('diskGauge').getContext('2d');
+            cpuGauge = new Chart(cpuCtx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [0, 100], backgroundColor: ['#ff6b6b', '#2c3e50'], borderWidth: 0 }] },
+                options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => '0%' } } } }
+            });
+            memGauge = new Chart(memCtx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [0, 100], backgroundColor: ['#4d9fff', '#2c3e50'], borderWidth: 0 }] },
+                options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => '0%' } } } }
+            });
+            diskGauge = new Chart(diskCtx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [0, 100], backgroundColor: ['#f39c12', '#2c3e50'], borderWidth: 0 }] },
+                options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => '0%' } } } }
+            });
+            document.getElementById('cpuPercent').innerText = '0%';
+            document.getElementById('memPercent').innerText = '0%';
+            document.getElementById('diskPercent').innerText = '0%';
         }
 
         const tbody = document.getElementById('reportTable');
         if (!reports.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No reports yet. Click "Generate Report"</td></tr>';
+            tbody.innerHTML = '</td><td colspan="6" class="text-center text-muted py-4">No reports yet. Click "Generate Report"<\/td></tr>';
             if (historyChart) historyChart.destroy();
             return;
         }
@@ -194,14 +224,6 @@ document.getElementById('dateRangeSelect').addEventListener('change', (e) => {
     loadReports();
 });
 
-if (!getToken()) {
-    window.location.href = '/login';
-} else {
-    loadUser();
-    loadSystemInfo();
-    loadReports();
-    startAutoRefresh();
-}
 async function stress(type) {
     const msgDiv = document.getElementById('stressMsg');
     msgDiv.innerHTML = `<i class="bi bi-hourglass-split"></i> Running ${type} stress test...`;
@@ -209,7 +231,7 @@ async function stress(type) {
     if (res.ok) {
         const data = await res.json();
         msgDiv.innerHTML = `<i class="bi bi-check-circle"></i> ${data.status}`;
-        await generateReport();  // automatically generate a report after stress
+        await generateReport();
         setTimeout(() => msgDiv.innerHTML = '', 5000);
     } else {
         msgDiv.innerHTML = `<i class="bi bi-x-circle"></i> Stress test failed`;
@@ -219,3 +241,12 @@ async function stress(type) {
 document.getElementById('stressCpuBtn').addEventListener('click', () => stress('cpu'));
 document.getElementById('stressMemBtn').addEventListener('click', () => stress('memory'));
 document.getElementById('stressDiskBtn').addEventListener('click', () => stress('disk'));
+
+if (!getToken()) {
+    window.location.href = '/login';
+} else {
+    loadUser();
+    loadSystemInfo();
+    loadReports();
+    startAutoRefresh();
+}

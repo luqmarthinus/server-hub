@@ -44,8 +44,8 @@ async function loadUsers() {
                 <td>
                     ${!u.is_superuser ? `<button class="btn btn-sm btn-warning toggle-role" data-id="${u.id}" data-email="${escapeHtml(u.email)}">Make Admin</button>` : `<button class="btn btn-sm btn-secondary toggle-role" data-id="${u.id}" data-email="${escapeHtml(u.email)}">Remove Admin</button>`}
                     <button class="btn btn-sm btn-danger delete-user" data-id="${u.id}" data-email="${escapeHtml(u.email)}">Delete</button>
-                </td>
-            </tr>
+                 </td>
+             </tr>
         `).join('');
 
         document.querySelectorAll('.toggle-role').forEach(btn => {
@@ -111,7 +111,6 @@ async function loadUserEmail() {
     }
 }
 
-// Add User Modal Logic
 document.getElementById('addUserBtn').addEventListener('click', () => {
     document.getElementById('addUserForm').reset();
     document.getElementById('addUserMsg').innerHTML = '';
@@ -136,8 +135,8 @@ document.getElementById('confirmAddUserBtn').addEventListener('click', async () 
             const modalEl = document.getElementById('addUserModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             modal.hide();
-            loadUsers(); // refresh list
-        }, 1500);
+            loadUsers();
+        }, 1000);
     } else {
         msgDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
     }
