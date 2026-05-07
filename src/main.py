@@ -13,7 +13,10 @@ from src.api.reports import router as reports_router
 from src.api.system import router as system_router
 from src.core.config import settings
 from src.core.logging import configure_logging
-from src.scheduler import scheduler   # <-- ADD THIS
+from src.scheduler import scheduler  
+from src.api.admin import router as admin_router
+from src.core.init_db import create_default_admin
+from src.core.database import AsyncSessionLocal
 
 
 @asynccontextmanager
@@ -26,6 +29,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler.start()
     logger.info("Background scheduler started (reports every minute).")
 
+    # Create default super admin if not exists
+    async with AsyncSessionLocal() as db:
+        await create_default_admin(db)
     yield
 
     # Shutdown the scheduler
@@ -57,7 +63,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(reports_router)
     app.include_router(system_router)
-
+    app.include_router(admin_router)
     # --------------------------------------------------------------------------
     # Static frontend assets (CSS, JS) – must be mounted before HTML routes
     # --------------------------------------------------------------------------
@@ -90,6 +96,10 @@ def create_app() -> FastAPI:
     @app.get("/register", response_class=HTMLResponse)
     async def register_page():
         return FileResponse(frontend_dir / "register.html")
+    
+    @app.get("/admin", response_class=HTMLResponse)
+    async def admin_page():
+        return FileResponse(frontend_dir / "admin.html")
 
     # --------------------------------------------------------------------------
     # Health check endpoints
