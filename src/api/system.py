@@ -1,15 +1,17 @@
-import platform
-import psutil
-import sys
 import asyncio
 import time
 import tempfile
 import os
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from src.api.auth import get_current_user
 from src.models.user import User
 
 router = APIRouter(prefix="/api/v1/system", tags=["system"])
+
+async def require_superuser(current_user: User = Depends(get_current_user)):
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    return current_user
 
 
 @router.get("/info")
@@ -18,6 +20,9 @@ async def get_system_info(current_user: User = Depends(get_current_user)):
     Returns system information: hostname, OS, Python version, CPU cores,
     memory total/used/percent, disk total/used/free/percent.
     """
+    import platform
+    import psutil
+    import sys
     mem = psutil.virtual_memory()
     disk = psutil.disk_usage('/')
     return {
@@ -34,10 +39,11 @@ async def get_system_info(current_user: User = Depends(get_current_user)):
         "disk_free_gb": round(disk.free / (1024 ** 3), 2),
         "disk_percent": disk.percent,
     }
-#These endpoints are used for stress testing
+
+
 @router.post("/stress/cpu")
-async def stress_cpu(current_user: User = Depends(get_current_user)):
-    """Simulate high CPU usage for 5 seconds."""
+async def stress_cpu(admin: User = Depends(require_superuser)):
+    """Simulate high CPU usage for 5 seconds. Super admin only."""
     async def _burn():
         end = time.time() + 5
         while time.time() < end:
@@ -45,15 +51,17 @@ async def stress_cpu(current_user: User = Depends(get_current_user)):
     await asyncio.to_thread(_burn)
     return {"status": "CPU stress test completed (5 seconds)"}
 
+
 @router.post("/stress/memory")
-async def stress_memory(current_user: User = Depends(get_current_user)):
-    """Allocate memory (200 MB) and then free it."""
+async def stress_memory(admin: User = Depends(require_superuser)):
+    """Allocate memory (200 MB) and then free it. Super admin only."""
     await asyncio.to_thread(lambda: [bytearray(1024*1024) for _ in range(200)])
     return {"status": "Memory stress test completed (200 MB allocated and freed)"}
 
+
 @router.post("/stress/disk")
-async def stress_disk(current_user: User = Depends(get_current_user)):
-    """Create a 200 MB temporary file and delete it."""
+async def stress_disk(admin: User = Depends(require_superuser)):
+    """Create a 200 MB temporary file and delete it. Super admin only."""
     async def _write():
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(b'\0' * (200 * 1024 * 1024))

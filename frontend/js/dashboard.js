@@ -33,6 +33,13 @@ async function loadUser() {
         if (adminLink) {
             adminLink.style.display = user.is_superuser ? 'inline-block' : 'none';
         }
+        // Show/hide stress test buttons for super admin only
+        const stressCpu = document.getElementById('stressCpuBtn');
+        const stressMem = document.getElementById('stressMemBtn');
+        const stressDisk = document.getElementById('stressDiskBtn');
+        if (stressCpu) stressCpu.style.display = user.is_superuser ? 'inline-block' : 'none';
+        if (stressMem) stressMem.style.display = user.is_superuser ? 'inline-block' : 'none';
+        if (stressDisk) stressDisk.style.display = user.is_superuser ? 'inline-block' : 'none';
     }
 }
 
@@ -124,7 +131,7 @@ async function loadReports() {
 
         const tbody = document.getElementById('reportTable');
         if (!reports.length) {
-            tbody.innerHTML = '</td><td colspan="6" class="text-center text-muted py-4">No reports yet. Click "Generate Report"<\/td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No reports yet. Click "Generate Report"</td></tr>';
             if (historyChart) historyChart.destroy();
             return;
         }
@@ -233,6 +240,9 @@ async function stress(type) {
         msgDiv.innerHTML = `<i class="bi bi-check-circle"></i> ${data.status}`;
         await generateReport();
         setTimeout(() => msgDiv.innerHTML = '', 5000);
+    } else if (res.status === 403) {
+        msgDiv.innerHTML = '<i class="bi bi-shield-lock"></i> Only super admin can run stress tests.';
+        setTimeout(() => msgDiv.innerHTML = '', 3000);
     } else {
         msgDiv.innerHTML = `<i class="bi bi-x-circle"></i> Stress test failed`;
     }
