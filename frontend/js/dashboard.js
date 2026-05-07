@@ -2,10 +2,13 @@ const API_BASE = '';
 let historyChart = null;
 let cpuGauge = null;
 let memGauge = null;
+let diskGauge = null;
 let autoRefreshInterval = null;
-let currentDays = 7; // default
+let currentDays = 7;
 
-function getToken() { return localStorage.getItem('access_token'); }
+function getToken() {
+    return localStorage.getItem('access_token');
+}
 
 async function apiFetch(endpoint, options = {}) {
     const token = getToken();
@@ -33,7 +36,6 @@ async function loadSystemInfo() {
     const res = await apiFetch('/api/v1/system/info');
     if (res.ok) {
         const info = await res.json();
-        // System info card
         const sysHtml = `
             <div class="col-md-3"><strong>Hostname:</strong> ${info.hostname}</div>
             <div class="col-md-3"><strong>OS:</strong> ${info.system} ${info.release}</div>
@@ -45,14 +47,7 @@ async function loadSystemInfo() {
             <div class="col-md-3"><strong>Disk Free:</strong> ${info.disk_free_gb} GB</div>
         `;
         document.getElementById('sysInfo').innerHTML = sysHtml;
-        // Disk usage card
-        document.getElementById('diskInfo').innerHTML = `Used: ${info.disk_used_gb} GB / ${info.disk_total_gb} GB (${info.disk_percent}%)`;
-        document.getElementById('diskProgress').style.width = `${info.disk_percent}%`;
-        document.getElementById('diskProgress').setAttribute('aria-valuenow', info.disk_percent);
-        // Memory details (used/total) below the gauge
-        if (document.getElementById('memDetails')) {
-            document.getElementById('memDetails').innerHTML = `${info.memory_used_gb} GB / ${info.memory_total_gb} GB`;
-        }
+        document.getElementById('diskDetails').innerHTML = `${info.disk_used_gb} GB / ${info.disk_total_gb} GB`;
     }
 }
 
@@ -65,31 +60,44 @@ async function loadReports() {
         const reports = data.reports;
         const latest = reports[0] || null;
         if (latest) {
-            // Update gauges with latest report values
+            // CPU gauge
             if (cpuGauge) cpuGauge.destroy();
-            if (memGauge) memGauge.destroy();
             const cpuCtx = document.getElementById('cpuGauge').getContext('2d');
-            const memCtx = document.getElementById('memGauge').getContext('2d');
             cpuGauge = new Chart(cpuCtx, {
                 type: 'doughnut',
                 data: { datasets: [{ data: [latest.cpu_percent, 100 - latest.cpu_percent], backgroundColor: ['#ff6b6b', '#2c3e50'], borderWidth: 0 }] },
                 options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => `${latest.cpu_percent.toFixed(1)}%` } } } }
             });
+            document.getElementById('cpuPercent').innerText = `${latest.cpu_percent.toFixed(1)}%`;
+
+            // Memory gauge
+            if (memGauge) memGauge.destroy();
+            const memCtx = document.getElementById('memGauge').getContext('2d');
             memGauge = new Chart(memCtx, {
                 type: 'doughnut',
                 data: { datasets: [{ data: [latest.memory_percent, 100 - latest.memory_percent], backgroundColor: ['#4d9fff', '#2c3e50'], borderWidth: 0 }] },
                 options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => `${latest.memory_percent.toFixed(1)}%` } } } }
             });
-            document.getElementById('cpuPercent').innerText = `${latest.cpu_percent.toFixed(1)}%`;
             document.getElementById('memPercent').innerText = `${latest.memory_percent.toFixed(1)}%`;
+
+            // Disk gauge
+            if (diskGauge) diskGauge.destroy();
+            const diskCtx = document.getElementById('diskGauge').getContext('2d');
+            diskGauge = new Chart(diskCtx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [latest.disk_percent, 100 - latest.disk_percent], backgroundColor: ['#f39c12', '#2c3e50'], borderWidth: 0 }] },
+                options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => `${latest.disk_percent.toFixed(1)}%` } } } }
+            });
+            document.getElementById('diskPercent').innerText = `${latest.disk_percent.toFixed(1)}%`;
         }
-        // Update table
+
         const tbody = document.getElementById('reportTable');
         if (!reports.length) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No reports yet. Click "Generate Report"</td></tr>';
             if (historyChart) historyChart.destroy();
             return;
         }
+
         tbody.innerHTML = reports.map(r => `
             <tr>
                 <td>${new Date(r.created_at).toLocaleString()}</td>
@@ -100,7 +108,7 @@ async function loadReports() {
                 <td><button class="btn btn-sm btn-outline-danger delete-report" data-id="${r.id}"><i class="bi bi-trash"></i></button></td>
             </tr>
         `).join('');
-        // History bar chart (last 10)
+
         const last10 = reports.slice(-10);
         const labels = last10.map(r => new Date(r.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
         const cpuData = last10.map(r => r.cpu_percent);
@@ -109,10 +117,13 @@ async function loadReports() {
         const ctx = document.getElementById('historyChart').getContext('2d');
         historyChart = new Chart(ctx, {
             type: 'bar',
-            data: { labels, datasets: [{ label: 'CPU %', data: cpuData, backgroundColor: '#ff6b6b' }, { label: 'Memory %', data: memData, backgroundColor: '#4d9fff' }] },
+            data: { labels, datasets: [
+                { label: 'CPU %', data: cpuData, backgroundColor: '#ff6b6b' },
+                { label: 'Memory %', data: memData, backgroundColor: '#4d9fff' }
+            ] },
             options: { responsive: true, maintainAspectRatio: true, scales: { y: { beginAtZero: true, max: 100 } } }
         });
-        // Attach delete event handlers
+
         document.querySelectorAll('.delete-report').forEach(btn => {
             btn.addEventListener('click', () => deleteReport(btn.dataset.id));
         });
@@ -133,12 +144,12 @@ async function generateReport() {
     msgDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-light me-2" role="status"></div> Generating...';
     const res = await apiFetch('/api/v1/reports/', { method: 'POST' });
     if (res.ok) {
-        msgDiv.innerHTML = '<div class="alert alert-success py-2">✔ Report generated successfully!</div>';
+        msgDiv.innerHTML = '<div class="alert alert-success py-2">Report generated successfully!</div>';
         await loadReports();
         setTimeout(() => msgDiv.innerHTML = '', 3000);
     } else {
         const err = await res.text();
-        msgDiv.innerHTML = `<div class="alert alert-danger py-2"> Error: ${err}</div>`;
+        msgDiv.innerHTML = `<div class="alert alert-danger py-2">Error: ${err}</div>`;
     }
     btn.disabled = false;
 }
@@ -167,7 +178,6 @@ function stopAutoRefresh() {
     if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
 }
 
-// Event listeners
 document.getElementById('logoutBtn').addEventListener('click', () => {
     localStorage.removeItem('access_token');
     window.location.href = '/login';
@@ -183,7 +193,6 @@ document.getElementById('dateRangeSelect').addEventListener('change', (e) => {
     loadReports();
 });
 
-// Initial load
 if (!getToken()) {
     window.location.href = '/login';
 } else {
