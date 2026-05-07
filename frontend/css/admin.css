@@ -1,0 +1,49 @@
+body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    min-height: 100vh;
+}
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.table {
+    color: #e0e0e0;
+}
+.table thead th {
+    background: rgba(0, 0, 0, 0.6);
+    border-bottom: none;
+}
+.table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.table tbody tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+.navbar-dark.bg-dark-glass {
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px);
+}
+.btn-sm {
+    margin: 0 2px;
+}
+.glass-modal .modal-content {
+    background: rgba(30, 30, 40, 0.95);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #f0f0f0;
+}
+.glass-modal .modal-header,
+.glass-modal .modal-footer {
+    border-color: rgba(255,255,255,0.1);
+}
+.glass-modal .form-control {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+}
+.glass-modal .form-control:focus {
+    background: rgba(0,0,0,0.5);
+    color: white;
+}
