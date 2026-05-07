@@ -202,3 +202,20 @@ if (!getToken()) {
     loadReports();
     startAutoRefresh();
 }
+async function stress(type) {
+    const msgDiv = document.getElementById('stressMsg');
+    msgDiv.innerHTML = `<i class="bi bi-hourglass-split"></i> Running ${type} stress test...`;
+    const res = await apiFetch(`/api/v1/system/stress/${type}`, { method: 'POST' });
+    if (res.ok) {
+        const data = await res.json();
+        msgDiv.innerHTML = `<i class="bi bi-check-circle"></i> ${data.status}`;
+        await generateReport();  // automatically generate a report after stress
+        setTimeout(() => msgDiv.innerHTML = '', 5000);
+    } else {
+        msgDiv.innerHTML = `<i class="bi bi-x-circle"></i> Stress test failed`;
+    }
+}
+
+document.getElementById('stressCpuBtn').addEventListener('click', () => stress('cpu'));
+document.getElementById('stressMemBtn').addEventListener('click', () => stress('memory'));
+document.getElementById('stressDiskBtn').addEventListener('click', () => stress('disk'));

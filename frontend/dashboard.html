@@ -66,7 +66,7 @@
             </div>
         </div>
 
-        <!-- Row 3: Controls (generate, export, auto-refresh, date range) -->
+        <!-- Row 3: Controls (generate, export, stress, auto-refresh, date range) -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card glass-card">
@@ -74,6 +74,9 @@
                         <div>
                             <button id="generateBtn" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Generate Report</button>
                             <button id="exportBtn" class="btn btn-outline-light ms-2"><i class="bi bi-download"></i> Export CSV</button>
+                            <button id="stressCpuBtn" class="btn btn-warning ms-2"><i class="bi bi-cpu"></i> Stress CPU</button>
+                            <button id="stressMemBtn" class="btn btn-warning ms-2"><i class="bi bi-memory"></i> Stress Memory</button>
+                            <button id="stressDiskBtn" class="btn btn-warning ms-2"><i class="bi bi-hdd"></i> Stress Disk</button>
                         </div>
                         <div class="d-flex align-items-center gap-3">
                             <div class="form-check">
@@ -89,6 +92,7 @@
                         </div>
                     </div>
                     <div id="generateMsg" class="px-3 pb-2"></div>
+                    <div id="stressMsg" class="px-3 pb-2 text-muted"></div>
                 </div>
             </div>
         </div>

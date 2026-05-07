@@ -6,6 +6,7 @@ import psutil
 import csv
 from io import StringIO
 from datetime import datetime, timedelta
+from src.api.alert import check_and_alert
 
 from src.core.database import get_db
 from src.api.auth import get_current_user
@@ -72,6 +73,11 @@ async def create_report(
     await db.commit()
     await db.refresh(new_report)
     return new_report
+    await check_and_alert(
+    cpu=metrics["cpu_percent"],
+    memory=metrics["memory_percent"],
+    disk=metrics["disk_percent"]
+)
 
 
 @router.get(
