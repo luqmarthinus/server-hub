@@ -48,6 +48,7 @@ async function loadSystemInfo() {
         `;
         document.getElementById('sysInfo').innerHTML = sysHtml;
         document.getElementById('diskDetails').innerHTML = `${info.disk_used_gb} GB / ${info.disk_total_gb} GB`;
+        document.getElementById('memDetails').innerHTML = `${info.memory_used_gb} GB / ${info.memory_total_gb} GB`;
     }
 }
 
