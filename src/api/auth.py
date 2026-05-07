@@ -8,6 +8,7 @@ from src.core.security import verify_password, get_password_hash, create_access_
 from src.models.user import User
 from src.schemas.user import UserCreate, UserResponse
 from src.schemas.token import Token
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 
@@ -134,3 +135,37 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     Returns the user object (id, email, full_name, is_active, is_superuser, created_at).
     """
     return current_user
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.put("/change-password", status_code=status.HTTP_200_OK)
+async def change_password(
+    request: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Change the authenticated user's password.
+    Requires the current password for verification.
+    """
+    if not verify_password(request.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    new_hashed = get_password_hash(request.new_password)
+    current_user.hashed_password = new_hashed
+    db.add(current_user)
+    await db.commit()
+    return {"message": "Password updated successfully"}
+
+@router.delete("/delete-account", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Delete the authenticated user's account and all associated reports.
+    """
+    await db.delete(current_user)
+    await db.commit()
+    return None

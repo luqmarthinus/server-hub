@@ -83,6 +83,10 @@ def create_app() -> FastAPI:
     async def dashboard_page():
         return FileResponse(frontend_dir / "dashboard.html")
     
+    @app.get("/profile", response_class=HTMLResponse)
+    async def profile_page():
+        return FileResponse(frontend_dir / "profile.html")
+    
     @app.get("/register", response_class=HTMLResponse)
     async def register_page():
         return FileResponse(frontend_dir / "register.html")
