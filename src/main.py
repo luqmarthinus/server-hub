@@ -13,7 +13,7 @@ from src.api.reports import router as reports_router
 from src.api.system import router as system_router
 from src.core.config import settings
 from src.core.logging import configure_logging
-from src.scheduler import scheduler  
+from src.core.scheduler import scheduler  
 from src.api.admin import router as admin_router
 from src.core.init_db import create_default_admin
 from src.core.database import AsyncSessionLocal

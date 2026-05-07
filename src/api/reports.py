@@ -6,7 +6,7 @@ import psutil
 import csv
 from io import StringIO
 from datetime import datetime, timedelta
-from src.api.alert import check_and_alert
+from src.services.alert import check_and_alert
 
 from src.core.database import get_db
 from src.api.auth import get_current_user
