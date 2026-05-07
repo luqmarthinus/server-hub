@@ -13,6 +13,7 @@ from src.api.reports import router as reports_router
 from src.api.system import router as system_router
 from src.core.config import settings
 from src.core.logging import configure_logging
+from src.scheduler import scheduler   # <-- ADD THIS
 
 
 @asynccontextmanager
@@ -20,7 +21,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     configure_logging()
     logger.info("Starting FastAPI application")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
+
+    # Start the background scheduler
+    scheduler.start()
+    logger.info("Background scheduler started (reports every minute).")
+
     yield
+
+    # Shutdown the scheduler
+    scheduler.shutdown()
+    logger.info("Background scheduler shut down.")
     logger.info("Shutting down FastAPI application")
 
 

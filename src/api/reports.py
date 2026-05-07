@@ -38,6 +38,36 @@ def get_system_metrics():
     }
 
 
+async def generate_report(user: User, db: AsyncSession):
+    """
+    Core function to generate a report and save it to the database.
+    Returns the created report object.
+    """
+    metrics = get_system_metrics()
+    new_report = ServerReport(
+        user_id=user.id,
+        cpu_percent=metrics["cpu_percent"],
+        memory_percent=metrics["memory_percent"],
+        memory_used_mb=metrics["memory_used_mb"],
+        memory_total_mb=metrics["memory_total_mb"],
+        disk_percent=metrics["disk_percent"],
+        disk_used_gb=metrics["disk_used_gb"],
+        disk_total_gb=metrics["disk_total_gb"],
+        network=metrics["network"],
+    )
+    db.add(new_report)
+    await db.commit()
+    await db.refresh(new_report)
+
+    # Send alerts if thresholds exceeded
+    await check_and_alert(
+        cpu=metrics["cpu_percent"],
+        memory=metrics["memory_percent"],
+        disk=metrics["disk_percent"]
+    )
+    return new_report
+
+
 @router.post(
     "/",
     response_model=ReportResponse,
@@ -57,30 +87,7 @@ async def create_report(
 
     Returns the saved report object (id, user_id, metrics, created_at).
     """
-    metrics = get_system_metrics()
-    new_report = ServerReport(
-        user_id=current_user.id,
-        cpu_percent=metrics["cpu_percent"],
-        memory_percent=metrics["memory_percent"],
-        memory_used_mb=metrics["memory_used_mb"],
-        memory_total_mb=metrics["memory_total_mb"],
-        disk_percent=metrics["disk_percent"],
-        disk_used_gb=metrics["disk_used_gb"],
-        disk_total_gb=metrics["disk_total_gb"],
-        network=metrics["network"],
-    )
-    db.add(new_report)
-    await db.commit()
-    await db.refresh(new_report)
-
-    # Send alert if thresholds exceeded
-    await check_and_alert(
-        cpu=metrics["cpu_percent"],
-        memory=metrics["memory_percent"],
-        disk=metrics["disk_percent"]
-    )
-
-    return new_report
+    return await generate_report(current_user, db)
 
 
 @router.get(
