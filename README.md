@@ -24,7 +24,7 @@ cd server-hub
 ```bash
 cp .env.example .env
 # Generate a secure JWT secret (32 bytes hex)
-echo "JWT_SECRET=$(openssl rand -hex 32)" >> .env
+printf "\nJWT_SECRET=%s\n" "$(openssl rand -hex 32)" >> .env
 ```
 3. Start the stack:
 
