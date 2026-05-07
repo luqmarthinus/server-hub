@@ -72,12 +72,15 @@ async def create_report(
     db.add(new_report)
     await db.commit()
     await db.refresh(new_report)
-    return new_report
+
+    # Send alert if thresholds exceeded
     await check_and_alert(
-    cpu=metrics["cpu_percent"],
-    memory=metrics["memory_percent"],
-    disk=metrics["disk_percent"]
-)
+        cpu=metrics["cpu_percent"],
+        memory=metrics["memory_percent"],
+        disk=metrics["disk_percent"]
+    )
+
+    return new_report
 
 
 @router.get(
