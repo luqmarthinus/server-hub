@@ -13,7 +13,11 @@ async function apiFetch(endpoint, options = {}) {
         ...options,
         headers: { 'Authorization': `Bearer ${token}`, ...options.headers }
     });
-    if (res.status === 401) { localStorage.removeItem('access_token'); window.location.href = '/login'; throw new Error('Unauthorized'); }
+    if (res.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+        throw new Error('Unauthorized');
+    }
     return res;
 }
 
@@ -21,12 +25,34 @@ async function loadUser() {
     const res = await apiFetch('/api/v1/auth/me');
     if (res.ok) {
         const user = await res.json();
-        document.getElementById('userInfo').innerHTML = `
-            <p><strong><i class="bi bi-envelope-fill"></i> Email:</strong> ${escapeHtml(user.email)}</p>
-            <p><strong><i class="bi bi-person-fill"></i> Name:</strong> ${escapeHtml(user.full_name || '—')}</p>
-            <p><strong><i class="bi bi-key-fill"></i> ID:</strong> ${user.id}</p>
-        `;
         document.getElementById('userEmailNav').innerText = user.email;
+    }
+}
+
+async function loadSystemInfo() {
+    const res = await apiFetch('/api/v1/system/info');
+    if (res.ok) {
+        const info = await res.json();
+        // System info card
+        const sysHtml = `
+            <div class="col-md-3"><strong>Hostname:</strong> ${info.hostname}</div>
+            <div class="col-md-3"><strong>OS:</strong> ${info.system} ${info.release}</div>
+            <div class="col-md-3"><strong>Python:</strong> ${info.python_version}</div>
+            <div class="col-md-3"><strong>CPU Cores:</strong> ${info.cpu_cores}</div>
+            <div class="col-md-3"><strong>Total Memory:</strong> ${info.memory_total_gb} GB</div>
+            <div class="col-md-3"><strong>Disk Total:</strong> ${info.disk_total_gb} GB</div>
+            <div class="col-md-3"><strong>Disk Used:</strong> ${info.disk_used_gb} GB</div>
+            <div class="col-md-3"><strong>Disk Free:</strong> ${info.disk_free_gb} GB</div>
+        `;
+        document.getElementById('sysInfo').innerHTML = sysHtml;
+        // Disk usage card
+        document.getElementById('diskInfo').innerHTML = `Used: ${info.disk_used_gb} GB / ${info.disk_total_gb} GB (${info.disk_percent}%)`;
+        document.getElementById('diskProgress').style.width = `${info.disk_percent}%`;
+        document.getElementById('diskProgress').setAttribute('aria-valuenow', info.disk_percent);
+        // Memory details (used/total) below the gauge
+        if (document.getElementById('memDetails')) {
+            document.getElementById('memDetails').innerHTML = `${info.memory_used_gb} GB / ${info.memory_total_gb} GB`;
+        }
     }
 }
 
@@ -39,13 +65,21 @@ async function loadReports() {
         const reports = data.reports;
         const latest = reports[0] || null;
         if (latest) {
-            // update gauges
+            // Update gauges with latest report values
             if (cpuGauge) cpuGauge.destroy();
             if (memGauge) memGauge.destroy();
             const cpuCtx = document.getElementById('cpuGauge').getContext('2d');
             const memCtx = document.getElementById('memGauge').getContext('2d');
-            cpuGauge = new Chart(cpuCtx, { type: 'doughnut', data: { datasets: [{ data: [latest.cpu_percent, 100 - latest.cpu_percent], backgroundColor: ['#ff6b6b', '#2c3e50'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => `${latest.cpu_percent.toFixed(1)}%` } } } } });
-            memGauge = new Chart(memCtx, { type: 'doughnut', data: { datasets: [{ data: [latest.memory_percent, 100 - latest.memory_percent], backgroundColor: ['#4d9fff', '#2c3e50'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => `${latest.memory_percent.toFixed(1)}%` } } } } });
+            cpuGauge = new Chart(cpuCtx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [latest.cpu_percent, 100 - latest.cpu_percent], backgroundColor: ['#ff6b6b', '#2c3e50'], borderWidth: 0 }] },
+                options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => `${latest.cpu_percent.toFixed(1)}%` } } } }
+            });
+            memGauge = new Chart(memCtx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [latest.memory_percent, 100 - latest.memory_percent], backgroundColor: ['#4d9fff', '#2c3e50'], borderWidth: 0 }] },
+                options: { cutout: '70%', plugins: { tooltip: { callbacks: { label: () => `${latest.memory_percent.toFixed(1)}%` } } } }
+            });
             document.getElementById('cpuPercent').innerText = `${latest.cpu_percent.toFixed(1)}%`;
             document.getElementById('memPercent').innerText = `${latest.memory_percent.toFixed(1)}%`;
         }
@@ -78,7 +112,7 @@ async function loadReports() {
             data: { labels, datasets: [{ label: 'CPU %', data: cpuData, backgroundColor: '#ff6b6b' }, { label: 'Memory %', data: memData, backgroundColor: '#4d9fff' }] },
             options: { responsive: true, maintainAspectRatio: true, scales: { y: { beginAtZero: true, max: 100 } } }
         });
-        // delete handlers
+        // Attach delete event handlers
         document.querySelectorAll('.delete-report').forEach(btn => {
             btn.addEventListener('click', () => deleteReport(btn.dataset.id));
         });
@@ -104,7 +138,7 @@ async function generateReport() {
         setTimeout(() => msgDiv.innerHTML = '', 3000);
     } else {
         const err = await res.text();
-        msgDiv.innerHTML = `<div class="alert alert-danger py-2">❌ Error: ${err}</div>`;
+        msgDiv.innerHTML = `<div class="alert alert-danger py-2"> Error: ${err}</div>`;
     }
     btn.disabled = false;
 }
@@ -122,16 +156,39 @@ async function exportCSV() {
     }
 }
 
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+function startAutoRefresh() {
+    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    autoRefreshInterval = setInterval(() => {
+        loadReports();
+        loadSystemInfo();
+    }, 10000);
+}
+function stopAutoRefresh() {
+    if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
+}
 
-// Auto-refresh
-function startAutoRefresh() { if (autoRefreshInterval) clearInterval(autoRefreshInterval); autoRefreshInterval = setInterval(() => loadReports(), 10000); }
-function stopAutoRefresh() { if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; } }
-
-document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.removeItem('access_token'); window.location.href = '/login'; });
+// Event listeners
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('access_token');
+    window.location.href = '/login';
+});
 document.getElementById('generateBtn').addEventListener('click', generateReport);
 document.getElementById('exportBtn').addEventListener('click', exportCSV);
-document.getElementById('autoRefreshCheck').addEventListener('change', (e) => { if (e.target.checked) startAutoRefresh(); else stopAutoRefresh(); });
-document.getElementById('dateRangeSelect').addEventListener('change', (e) => { currentDays = e.target.value || null; loadReports(); });
+document.getElementById('autoRefreshCheck').addEventListener('change', (e) => {
+    if (e.target.checked) startAutoRefresh();
+    else stopAutoRefresh();
+});
+document.getElementById('dateRangeSelect').addEventListener('change', (e) => {
+    currentDays = e.target.value || null;
+    loadReports();
+});
 
-if (!getToken()) { window.location.href = '/login'; } else { loadUser(); loadReports(); startAutoRefresh(); }
+// Initial load
+if (!getToken()) {
+    window.location.href = '/login';
+} else {
+    loadUser();
+    loadSystemInfo();
+    loadReports();
+    startAutoRefresh();
+}

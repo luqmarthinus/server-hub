@@ -10,6 +10,7 @@ from loguru import logger
 
 from src.api.auth import router as auth_router
 from src.api.reports import router as reports_router
+from src.api.system import router as system_router
 from src.core.config import settings
 from src.core.logging import configure_logging
 
@@ -45,6 +46,7 @@ def create_app() -> FastAPI:
     # Include API routers
     app.include_router(auth_router)
     app.include_router(reports_router)
+    app.include_router(system_router)
 
     # --------------------------------------------------------------------------
     # Static frontend assets (CSS, JS) – must be mounted before HTML routes
