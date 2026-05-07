@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Hub · Login</title>
+    <title>Server Hub · Register</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/static/css/login.css">
+    <link rel="stylesheet" href="/static/css/register.css">
 </head>
 <body>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-5 col-lg-4">
-            <div class="card login-card border-0">
-                <div class="login-header">
-                    <i class="bi bi-hdd-stack-fill"></i>
-                    <h3>Server Hub</h3>
-                    <p>System reporting & authentication</p>
+            <div class="card register-card border-0">
+                <div class="register-header">
+                    <i class="bi bi-person-plus-fill"></i>
+                    <h3>Create Account</h3>
+                    <p>Join Server Hub</p>
                 </div>
                 <div class="card-body p-4 p-lg-5">
                     <div class="mb-3">
@@ -26,6 +26,13 @@
                             <input type="email" id="email" class="form-control" placeholder="you@example.com">
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Full name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" id="fullname" class="form-control" placeholder="Your name">
+                        </div>
+                    </div>
                     <div class="mb-4">
                         <label class="form-label">Password</label>
                         <div class="input-group">
@@ -33,16 +40,17 @@
                             <input type="password" id="password" class="form-control" placeholder="••••••••">
                         </div>
                     </div>
-                    <button id="loginBtn" class="btn btn-primary w-100">Sign In</button>
+                    <button id="registerBtn" class="btn btn-primary w-100">Sign up</button>
                     <div class="text-center mt-3 small">
-                        No account? <a href="/register" class="register-link">Create one</a>
+                        Already have an account? <a href="/login">Log in</a>
                     </div>
                     <div id="errorMsg" class="alert alert-danger mt-3 d-none"></div>
+                    <div id="successMsg" class="alert alert-success mt-3 d-none"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<script src="/static/js/login.js"></script>
+<script src="/static/js/register.js"></script>
 </body>
 </html>

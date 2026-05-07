@@ -70,6 +70,10 @@ def create_app() -> FastAPI:
     @app.get("/dashboard", response_class=HTMLResponse)
     async def dashboard_page():
         return FileResponse(frontend_dir / "dashboard.html")
+    
+    @app.get("/register", response_class=HTMLResponse)
+    async def register_page():
+        return FileResponse(frontend_dir / "register.html")
 
     # --------------------------------------------------------------------------
     # Health check endpoints
