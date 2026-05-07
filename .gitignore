@@ -19,3 +19,4 @@ migrations/versions/__pycache__/
 # OS metadata
 .DS_Store
 Thumbs.dbbackups/
+backups/
