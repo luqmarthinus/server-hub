@@ -138,7 +138,7 @@ async function loadReports() {
 
         tbody.innerHTML = reports.map(r => `
             <tr>
-                <td>${new Date(r.created_at).toLocaleString()}</td>
+                <td>${new Date(r.created_at + 'Z').toLocaleString()}</td>
                 <td><span class="badge bg-info text-dark">${r.cpu_percent.toFixed(1)}%</span></td>
                 <td><span class="badge bg-primary">${r.memory_percent.toFixed(1)}%</span></td>
                 <td><span class="badge bg-warning text-dark">${r.disk_percent.toFixed(1)}%</span></td>
