@@ -7,8 +7,8 @@ from alembic import context
 from src.core.database import Base
 
 # Import all models so that Base.metadata knows about them
-from src.models.user import User
-from src.models.report import ServerReport
+from src.models.user import User  # noqa: F401
+from src.models.report import ServerReport  # noqa: F401
 
 # this is the Alembic Config object, which provides access to the .ini file
 config = context.config

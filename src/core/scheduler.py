@@ -10,7 +10,7 @@ async def scheduled_report():
     """Generate a report every minute using a system user."""
     async with AsyncSessionLocal() as db:
         # Find a user to own the report (first superuser, else first user)
-        result = await db.execute(select(User).where(User.is_superuser == True))
+        result = await db.execute(select(User).where(User.is_superuser))
         user = result.scalar_one_or_none()
         if not user:
             result = await db.execute(select(User).limit(1))

@@ -1,7 +1,6 @@
 import os
 import httpx
 from loguru import logger
-from src.core.config import settings
 
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
 

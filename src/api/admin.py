@@ -78,7 +78,7 @@ async def delete_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.is_superuser:
-        super_count = await db.execute(select(func.count()).select_from(User).where(User.is_superuser == True))
+        super_count = await db.execute(select(func.count()).select_from(User).where(User.is_superuser))
         if super_count.scalar() <= 1:
             raise HTTPException(status_code=400, detail="Cannot delete the only super admin account")
     await db.delete(user)
