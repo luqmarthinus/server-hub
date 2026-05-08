@@ -1,13 +1,29 @@
 body {
     background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, -apple-system, 'Roboto', sans-serif;
 }
+
+/* Navbar rounded corners */
+.navbar-dark.bg-dark-glass {
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0 0 1rem 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Glass cards with rounded corners */
 .glass-card {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border-radius: 1.25rem;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 }
+
+/* Table styles */
 .table {
     color: #e0e0e0;
 }
@@ -19,15 +35,10 @@ body {
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 .table tbody tr:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
 }
-.navbar-dark.bg-dark-glass {
-    background: rgba(0, 0, 0, 0.5) !important;
-    backdrop-filter: blur(12px);
-}
-.btn-sm {
-    margin: 0 2px;
-}
+
+/* Modal glass effect (adds consistency) */
 .glass-modal .modal-content {
     background: rgba(30, 30, 40, 0.95);
     backdrop-filter: blur(15px);
