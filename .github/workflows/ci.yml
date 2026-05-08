@@ -7,25 +7,54 @@ on:
     branches: [ main ]
 
 jobs:
-  lint-and-build:
+  lint-test-build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install ruff
+    
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Run Ruff linter
-      run: ruff check .
+      # ------------------------------------------------------------
+      # Install tooling 
+      # ------------------------------------------------------------
+      - name: Install tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
 
-    - name: Build Docker image (no push)
-      run: docker build . --tag server-hub:ci
+      # ------------------------------------------------------------
+      # Code quality: formatting check (fail fast)
+      # ------------------------------------------------------------
+      - name: Run Ruff format check
+        run: ruff format --check .
+
+      # ------------------------------------------------------------
+      # Linting
+      # ------------------------------------------------------------
+      - name: Run Ruff lint
+        run: ruff check .
+
+      # ------------------------------------------------------------
+      # Validate Docker build (no cache = reproducibility check)
+      # ------------------------------------------------------------
+      - name: Build Docker image
+        run: docker build --no-cache -t server-hub:ci .
+
+      # ------------------------------------------------------------
+      # Basic sanity check: container starts
+      # ------------------------------------------------------------
+      - name: Smoke test container
+        run: |
+          docker run -d --name test-container -p 8000:8000 server-hub:ci
+          sleep 10
+          docker ps
+          docker logs test-container
+          docker stop test-container
+          docker rm test-container
