@@ -4,7 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from src.core.database import get_db
-from src.core.security import verify_password, get_password_hash, create_access_token, decode_access_token
+from src.core.security import (
+    verify_password,
+    get_password_hash,
+    create_access_token,
+    decode_access_token,
+)
 from src.models.user import User
 from src.schemas.user import UserCreate, UserResponse
 from src.schemas.token import Token
@@ -43,7 +48,7 @@ async def get_current_user(
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
     description="Create a new user account. Email must be unique and valid format.",
-    response_description="The created user object (without password)."
+    response_description="The created user object (without password).",
 )
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     """
@@ -84,7 +89,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     "/login",
     response_model=Token,
     summary="Login with email and password",
-    description="Returns a JWT access token. Use this token in the Authorization header as `Bearer <token>`."
+    description="Returns a JWT access token. Use this token in the Authorization header as `Bearer <token>`.",
 )
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -123,7 +128,7 @@ async def login(
     "/me",
     response_model=UserResponse,
     summary="Get current user information",
-    description="Returns the profile of the authenticated user. Requires a valid Bearer token."
+    description="Returns the profile of the authenticated user. Requires a valid Bearer token.",
 )
 async def read_users_me(current_user: User = Depends(get_current_user)):
     """
@@ -136,9 +141,11 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     return current_user
 
+
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
 
 @router.put("/change-password", status_code=status.HTTP_200_OK)
 async def change_password(
@@ -157,6 +164,7 @@ async def change_password(
     db.add(current_user)
     await db.commit()
     return {"message": "Password updated successfully"}
+
 
 @router.delete("/delete-account", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_account(

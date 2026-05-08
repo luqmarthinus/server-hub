@@ -4,6 +4,7 @@ from loguru import logger
 
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
 
+
 async def send_slack_alert(metric: str, value: float, threshold: float):
     if not SLACK_WEBHOOK_URL:
         logger.warning("SLACK_WEBHOOK_URL not set, skipping alert")
@@ -15,6 +16,7 @@ async def send_slack_alert(metric: str, value: float, threshold: float):
             logger.info(f"Alert sent to Slack for {metric}")
         except Exception as e:
             logger.error(f"Failed to send Slack alert: {e}")
+
 
 async def check_and_alert(cpu: float, memory: float, disk: float):
     cpu_threshold = float(os.getenv("ALERT_CPU_THRESHOLD", "80"))

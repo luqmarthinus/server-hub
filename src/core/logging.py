@@ -31,7 +31,9 @@ def configure_logging() -> None:
             enqueue=True,
         )
 
-    logger.info(f"Logging configured. Environment: {settings.ENVIRONMENT}, Level: {log_level}")
+    logger.info(
+        f"Logging configured. Environment: {settings.ENVIRONMENT}, Level: {log_level}"
+    )
 
 
 def get_logger(name: str = None):

@@ -7,6 +7,7 @@ DEFAULT_ADMIN_EMAIL = "server_admin@example.com"
 DEFAULT_ADMIN_PASSWORD = "mzansi2026"
 DEFAULT_ADMIN_FULL_NAME = "Server Administrator"
 
+
 async def create_default_admin(db: AsyncSession):
     """Create default super admin if it doesn't exist."""
     result = await db.execute(select(User).where(User.email == DEFAULT_ADMIN_EMAIL))
@@ -22,6 +23,8 @@ async def create_default_admin(db: AsyncSession):
         )
         db.add(new_admin)
         await db.commit()
-        print(f"Default super admin created: {DEFAULT_ADMIN_EMAIL} / {DEFAULT_ADMIN_PASSWORD}")
+        print(
+            f"Default super admin created: {DEFAULT_ADMIN_EMAIL} / {DEFAULT_ADMIN_PASSWORD}"
+        )
     else:
         print("Default super admin already exists")

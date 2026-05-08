@@ -13,7 +13,7 @@ from src.api.reports import router as reports_router
 from src.api.system import router as system_router
 from src.core.config import settings
 from src.core.logging import configure_logging
-from src.core.scheduler import scheduler  
+from src.core.scheduler import scheduler
 from src.api.admin import router as admin_router
 from src.core.init_db import create_default_admin
 from src.core.database import AsyncSessionLocal
@@ -88,15 +88,15 @@ def create_app() -> FastAPI:
     @app.get("/dashboard", response_class=HTMLResponse)
     async def dashboard_page():
         return FileResponse(frontend_dir / "dashboard.html")
-    
+
     @app.get("/profile", response_class=HTMLResponse)
     async def profile_page():
         return FileResponse(frontend_dir / "profile.html")
-    
+
     @app.get("/register", response_class=HTMLResponse)
     async def register_page():
         return FileResponse(frontend_dir / "register.html")
-    
+
     @app.get("/admin", response_class=HTMLResponse)
     async def admin_page():
         return FileResponse(frontend_dir / "admin.html")
@@ -118,6 +118,7 @@ def create_app() -> FastAPI:
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         import time
+
         start = time.perf_counter()
         response = await call_next(request)
         duration = time.perf_counter() - start
@@ -137,6 +138,7 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "src.main:app",
         host="0.0.0.0",

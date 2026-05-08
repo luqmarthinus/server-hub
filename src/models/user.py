@@ -19,4 +19,6 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    reports = relationship("ServerReport", back_populates="user", cascade="all, delete-orphan")
+    reports = relationship(
+        "ServerReport", back_populates="user", cascade="all, delete-orphan"
+    )

@@ -10,10 +10,12 @@ from src.schemas.user import UserCreate
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 
+
 async def require_superuser(current_user: User = Depends(get_current_user)):
     if not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
+
 
 @router.get("/users")
 async def list_users(
@@ -24,18 +26,23 @@ async def list_users(
     List all users with their report counts.
     Admin only.
     """
-    stmt = select(
-        User.id,
-        User.email,
-        User.full_name,
-        User.is_active,
-        User.is_superuser,
-        User.created_at,
-        func.count(ServerReport.id).label("report_count")
-    ).outerjoin(ServerReport, User.id == ServerReport.user_id).group_by(User.id)
+    stmt = (
+        select(
+            User.id,
+            User.email,
+            User.full_name,
+            User.is_active,
+            User.is_superuser,
+            User.created_at,
+            func.count(ServerReport.id).label("report_count"),
+        )
+        .outerjoin(ServerReport, User.id == ServerReport.user_id)
+        .group_by(User.id)
+    )
     result = await db.execute(stmt)
     users = result.mappings().all()
     return {"users": users}
+
 
 @router.post("/users", status_code=status.HTTP_201_CREATED)
 async def create_user(
@@ -62,6 +69,7 @@ async def create_user(
     await db.refresh(new_user)
     return {"id": new_user.id, "email": new_user.email, "full_name": new_user.full_name}
 
+
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
@@ -78,12 +86,17 @@ async def delete_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.is_superuser:
-        super_count = await db.execute(select(func.count()).select_from(User).where(User.is_superuser))
+        super_count = await db.execute(
+            select(func.count()).select_from(User).where(User.is_superuser)
+        )
         if super_count.scalar() <= 1:
-            raise HTTPException(status_code=400, detail="Cannot delete the only super admin account")
+            raise HTTPException(
+                status_code=400, detail="Cannot delete the only super admin account"
+            )
     await db.delete(user)
     await db.commit()
     return None
+
 
 @router.put("/users/{user_id}/role")
 async def toggle_superuser(
