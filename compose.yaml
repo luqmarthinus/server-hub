@@ -4,10 +4,11 @@ services:
     container_name: fastapi_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme_root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-fastapi_app}
-      MYSQL_USER: ${MYSQL_USER:-fastapi_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-changeme_user}
+      - TZ=${TZ:-UTC}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-changeme_root}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-fastapi_app}
+      - MYSQL_USER=${MYSQL_USER:-fastapi_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-changeme_user}
     ports:
       - "3306:3306"
     volumes:
@@ -28,12 +29,13 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - TZ=${TZ:-UTC}
       - DATABASE_URL=mysql+aiomysql://${MYSQL_USER:-fastapi_user}:${MYSQL_PASSWORD:-changeme_user}@mysql:3306/${MYSQL_DATABASE:-fastapi_app}
       - ENVIRONMENT=${ENVIRONMENT:-production}
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
-      - ALERT_CPU_THRESHOLD=${ALERT_CPU_THRESHOLD:-10}
-      - ALERT_MEMORY_THRESHOLD=${ALERT_MEMORY_THRESHOLD:-10}
-      - ALERT_DISK_THRESHOLD=${ALERT_DISK_THRESHOLD:-40}
+      - ALERT_CPU_THRESHOLD=${ALERT_CPU_THRESHOLD:-80}
+      - ALERT_MEMORY_THRESHOLD=${ALERT_MEMORY_THRESHOLD:-90}
+      - ALERT_DISK_THRESHOLD=${ALERT_DISK_THRESHOLD:-90}
     depends_on:
       mysql:
         condition: service_healthy
