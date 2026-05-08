@@ -2,69 +2,60 @@
 .git/
 .gitignore
 
-# Python cache and virtual environments
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
+
+# Virtual environments
 .venv/
 venv/
 env/
 
-# Environment files (should not be baked into image)
+# Environment files
 .env
 .env.local
 
-# IDE and editor files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Logs and temporary files
+# Logs
 *.log
 logs/
-*.tmp
-*.pid
 
-# Backup and database dumps
+# Backup files
 backups/
 *.sql
 *.sql.gz
 
-# Local scripts (not needed in image)
+# Local scripts directory (but keep docker-entrypoint.sh)
 scripts/
-*.sh
-!docker-entrypoint.sh   # exclude the entrypoint script? Actually we need it. We'll exclude other .sh.
 
 # Python package metadata
 *.egg-info/
 *.egg
-pip-wheel-metadata/
 
-# Testing and coverage
+# Testing
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
 
-# Docker and compose overrides (optional)
-docker-compose.override.yml
-
-# Frontend node_modules (nothing in this project)
-node_modules/
+# Alembic cache
+migrations/__pycache__/
+migrations/versions/__pycache__/
 
 # OS metadata
 .DS_Store
 Thumbs.db
 
-# Alembic cache
-migrations/__pycache__/
-migrations/versions/__pycache__/
-
-# Documentation and diagrams (not needed in image)
+# Documentation (optional)
 docs/
 *.md
-!README.md   # Keep README? Usually not needed in image but harmless. You can skip it.
+!README.md
 
-# License (not needed)
+# License (not needed in image)
 LICENSE
