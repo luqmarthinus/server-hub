@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
-import psutil
 import csv
-from io import StringIO
 from datetime import datetime, timedelta
-from src.services.alert import check_and_alert
+from io import StringIO
 
-from src.core.database import get_db
+import psutil
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
+from sqlalchemy import desc, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.api.auth import get_current_user
-from src.models.user import User
+from src.core.database import get_db
 from src.models.report import ServerReport
-from src.schemas.report import ReportResponse, ReportListResponse
+from src.models.user import User
+from src.schemas.report import ReportListResponse, ReportResponse
+from src.services.alert import check_and_alert
 
 router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
 
@@ -140,9 +141,7 @@ async def delete_report(
     Delete a report by its ID. Only the owner can delete it.
     """
     result = await db.execute(
-        select(ServerReport).where(
-            ServerReport.id == report_id, ServerReport.user_id == current_user.id
-        )
+        select(ServerReport).where(ServerReport.id == report_id, ServerReport.user_id == current_user.id)
     )
     report = result.scalar_one_or_none()
     if not report:

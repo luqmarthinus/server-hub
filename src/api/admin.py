@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from src.core.database import get_db
+
 from src.api.auth import get_current_user
+from src.core.database import get_db
 from src.core.security import get_password_hash
-from src.models.user import User
 from src.models.report import ServerReport
+from src.models.user import User
 from src.schemas.user import UserCreate
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
@@ -86,13 +87,9 @@ async def delete_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.is_superuser:
-        super_count = await db.execute(
-            select(func.count()).select_from(User).where(User.is_superuser)
-        )
+        super_count = await db.execute(select(func.count()).select_from(User).where(User.is_superuser))
         if super_count.scalar() <= 1:
-            raise HTTPException(
-                status_code=400, detail="Cannot delete the only super admin account"
-            )
+            raise HTTPException(status_code=400, detail="Cannot delete the only super admin account")
     await db.delete(user)
     await db.commit()
     return None

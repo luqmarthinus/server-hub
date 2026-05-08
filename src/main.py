@@ -1,22 +1,22 @@
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 from pathlib import Path
+from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
+from src.api.admin import router as admin_router
 from src.api.auth import router as auth_router
 from src.api.reports import router as reports_router
 from src.api.system import router as system_router
 from src.core.config import settings
+from src.core.database import AsyncSessionLocal
+from src.core.init_db import create_default_admin
 from src.core.logging import configure_logging
 from src.core.scheduler import scheduler
-from src.api.admin import router as admin_router
-from src.core.init_db import create_default_admin
-from src.core.database import AsyncSessionLocal
 
 
 @asynccontextmanager
@@ -43,7 +43,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Server Hub API",
-        description="Full‑stack server monitoring hub – FastAPI backend + interactive dashboard (JWT auth, MySQL, Docker, real‑time system metrics)",
+        description=(
+            "Full‑stack server monitoring hub – FastAPI backend + interactive dashboard "
+            "(JWT auth, MySQL, Docker, real‑time system metrics)"
+        ),
         version="0.2.0",
         docs_url="/docs" if settings.ENVIRONMENT == "development" else None,
         redoc_url="/redoc" if settings.ENVIRONMENT == "development" else None,

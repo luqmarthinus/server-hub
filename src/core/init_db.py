@@ -1,7 +1,8 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from src.models.user import User
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.security import get_password_hash
+from src.models.user import User
 
 DEFAULT_ADMIN_EMAIL = "server_admin@example.com"
 DEFAULT_ADMIN_PASSWORD = "mzansi2026"
@@ -23,8 +24,6 @@ async def create_default_admin(db: AsyncSession):
         )
         db.add(new_admin)
         await db.commit()
-        print(
-            f"Default super admin created: {DEFAULT_ADMIN_EMAIL} / {DEFAULT_ADMIN_PASSWORD}"
-        )
+        print(f"Default super admin created: {DEFAULT_ADMIN_EMAIL} / {DEFAULT_ADMIN_PASSWORD}")
     else:
         print("Default super admin already exists")

@@ -1,8 +1,10 @@
 import asyncio
-import time
-import tempfile
 import os
+import tempfile
+import time
+
 from fastapi import APIRouter, Depends, HTTPException
+
 from src.api.auth import get_current_user
 from src.models.user import User
 
@@ -22,8 +24,9 @@ async def get_system_info(current_user: User = Depends(get_current_user)):
     memory total/used/percent, disk total/used/free/percent.
     """
     import platform
-    import psutil
     import sys
+
+    import psutil
 
     mem = psutil.virtual_memory()
     disk = psutil.disk_usage("/")

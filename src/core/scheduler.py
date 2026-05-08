@@ -1,10 +1,11 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from loguru import logger
 from sqlalchemy import select
+
 from src.api.reports import generate_report
 from src.core.database import AsyncSessionLocal
 from src.models.user import User
-from loguru import logger
 
 
 async def scheduled_report():
@@ -27,6 +28,4 @@ async def scheduled_report():
 
 
 scheduler = AsyncIOScheduler()
-scheduler.add_job(
-    scheduled_report, trigger=IntervalTrigger(minutes=1), id="auto_report"
-)
+scheduler.add_job(scheduled_report, trigger=IntervalTrigger(minutes=1), id="auto_report")

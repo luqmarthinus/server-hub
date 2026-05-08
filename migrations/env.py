@@ -1,14 +1,15 @@
 # migrations/env.py
-from logging.config import fileConfig
 import os
-from sqlalchemy import engine_from_config, pool
+from logging.config import fileConfig
+
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 from src.core.database import Base
+from src.models.report import ServerReport  # noqa: F401
 
 # Import all models so that Base.metadata knows about them
 from src.models.user import User  # noqa: F401
-from src.models.report import ServerReport  # noqa: F401
 
 # this is the Alembic Config object, which provides access to the .ini file
 config = context.config
