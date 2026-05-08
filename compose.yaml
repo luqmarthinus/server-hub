@@ -1,52 +1,77 @@
 services:
   mysql:
     image: mysql:8.0.44
-    container_name: fastapi_mysql
+    container_name: server_hub_mysql
     restart: unless-stopped
+
     environment:
-      - TZ=${TZ:-UTC}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-changeme_root}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-fastapi_app}
-      - MYSQL_USER=${MYSQL_USER:-fastapi_user}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-changeme_user}
-    ports:
-      - "3306:3306"
+      TZ: ${TZ}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
     volumes:
       - mysql_data:/var/lib/mysql
+
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-changeme_root}"]
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
+
     networks:
-      - fastapi_network
+      - backend
+
+    # Only expose if you need host access for debugging/admin tools
+    # Remove in prod
+    ports:
+      - "3306:3306"
 
   app:
     build: .
-    container_name: fastapi_app
+    container_name: server_hub_api
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+
     environment:
-      - TZ=${TZ:-UTC}
-      - DATABASE_URL=mysql+aiomysql://${MYSQL_USER:-fastapi_user}:${MYSQL_PASSWORD:-changeme_user}@mysql:3306/${MYSQL_DATABASE:-fastapi_app}
-      - ENVIRONMENT=${ENVIRONMENT:-production}
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
-      - ALERT_CPU_THRESHOLD=${ALERT_CPU_THRESHOLD:-80}
-      - ALERT_MEMORY_THRESHOLD=${ALERT_MEMORY_THRESHOLD:-90}
-      - ALERT_DISK_THRESHOLD=${ALERT_DISK_THRESHOLD:-90}
+      TZ: ${TZ}
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+
+      DATABASE_URL: ${DATABASE_URL}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES}
+      JWT_REFRESH_TOKEN_EXPIRE_DAYS: ${JWT_REFRESH_TOKEN_EXPIRE_DAYS}
+
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+
+      ALERT_CPU_THRESHOLD: ${ALERT_CPU_THRESHOLD}
+      ALERT_MEMORY_THRESHOLD: ${ALERT_MEMORY_THRESHOLD}
+      ALERT_DISK_THRESHOLD: ${ALERT_DISK_THRESHOLD}
+
     depends_on:
       mysql:
         condition: service_healthy
+
+    ports:
+      - "8000:8000"
+
     networks:
-      - fastapi_network
+      - backend
 
 volumes:
   mysql_data:
-    name: fastapi_mysql_data
+    name: server_hub_mysql_data
 
 networks:
-  fastapi_network:
-    name: fastapi_network
+  backend:
+    name: server_hub_backend
     driver: bridge
