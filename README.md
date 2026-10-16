@@ -58,7 +58,9 @@ Email: `server_admin@example.com`
 
 Password: `mzansi2026`
 
-Change the password after first login via the Profile page.
+Change the password after first login via the Profile page, or set your own before first startup with `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env`. The app logs a warning on every startup while the default password is still in use.
+
+> These defaults are intentional for local demo use. Do not expose the app beyond localhost with them unchanged.
 
 ---
 

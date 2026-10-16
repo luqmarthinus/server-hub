@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     DATABASE_URL: str = Field(default="mysql+aiomysql://fastapi_user:changeme@localhost:3306/fastapi_app")
+
+    # Optional overrides for the seeded super admin (defaults live in src/core/init_db.py)
+    ADMIN_EMAIL: Optional[str] = Field(default=None)
+    ADMIN_PASSWORD: Optional[str] = Field(default=None)
 
     LOG_LEVEL: str = Field(default="INFO", pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
 
